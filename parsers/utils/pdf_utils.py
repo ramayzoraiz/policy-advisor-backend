@@ -15,6 +15,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from copy import deepcopy
 from google import genai
 from google.genai import types
+from typing import Any
 
 ################################################################
 def load_saving_paths(cfg)->tuple[Path, Path, Path]:
@@ -30,16 +31,16 @@ def load_saving_paths(cfg)->tuple[Path, Path, Path]:
 ################################################################
 
 ################################################################
-def load_saved(md_dir: Path)->list[str]:
-    with open(md_dir/'pdf_md_list.pkl', 'rb') as file:
-        md_list = pickle.load(file)
-    return md_list
+def load_saved_obj(dir: Path, filename: str)->list[str]:
+    with open(dir/filename, 'rb') as file:
+        obj = pickle.load(file)
+    return obj
 ################################################################
 
 ################################################################
-def save_md(md_dir: Path, md_list:list[str])->None:
-    with open(md_dir/'pdf_md_list.pkl', 'wb') as file:
-        pickle.dump(md_list, file)
+def save_obj(dir: Path, filename:str, obj:Any)->None:
+    with open(dir/filename, 'wb') as file:
+        pickle.dump(obj, file)
 ################################################################
 
 
@@ -84,20 +85,16 @@ def save_raw_md_from_pdf(docs_pdf:list[Path], out_pymupdf_md_dir:Path, out_docli
     pymupdf_md_list = load_raw_md_from_pdf_by_pymupdf(docs_pdf)
     docling_md_list = load_raw_md_from_pdf_by_docling(docs_pdf)
     # Save the object to a file
-    with open(out_pymupdf_md_dir/'raw.pkl', 'wb') as file:
-        pickle.dump(pymupdf_md_list, file)
-    with open(out_docling_md_dir/'raw.pkl', 'wb') as file:
-        pickle.dump(docling_md_list, file)
+    save_obj(out_pymupdf_md_dir, 'raw.pkl', pymupdf_md_list)
+    save_obj(out_docling_md_dir, 'raw.pkl', docling_md_list)
 ################################################################
 
 ################################################################
 def load_saved_raw_md_from_pdf(out_pymupdf_md_dir:Path, out_docling_md_dir:Path)->tuple[list[list[Document]],list[str]]:
     """loads pickle files stored by save_raw_md_from_pdf"""
     # Load the object from a file
-    with open(out_pymupdf_md_dir/'raw.pkl', 'rb') as file:
-        pymupdf_md_list = pickle.load(file)
-    with open(out_docling_md_dir/'raw.pkl', 'rb') as file:
-        docling_md_list = pickle.load(file)
+    pymupdf_md_list = load_saved_obj(out_pymupdf_md_dir, 'raw.pkl')
+    docling_md_list = load_saved_obj(out_docling_md_dir, 'raw.pkl')
     return pymupdf_md_list, docling_md_list
 ################################################################
 
@@ -120,7 +117,7 @@ def view_save(docs_dir:Path, docs_pdf:list[Path], out_pymupdf_md_dir:Path, out_d
         out_docling_files_path[i].write_bytes(whole_docling_file.encode())
 ################################################################
 
-
+################################################################
 def qa_metadata(pymupdf_md_list:list[list[Document]])->None:
     """for each md file, extract metadata(of first page as it has enough info for whole file).
       make sure file_path and source exists and are equal"""
@@ -131,8 +128,11 @@ def qa_metadata(pymupdf_md_list:list[list[Document]])->None:
         source = pg.metadata['source']
         assert source!='', f"source of {i} pymupdf with page 0 is empty"
         assert file_path == source, f"{file_path} not match with \n {source}"
+################################################################
 
-def split_single_md_to_pages_md(docling_md_list:list[str])->list[list[str]]:
+################################################################
+def docling_split_single_md_to_pages_md(docling_md_list:list[str])->list[list[str]]:
+    """split docling single md to pages md for a doc"""
     docling_pages_md_list = []
     for single_doc_md in docling_md_list:
         # separator_pattern = r"\n<-- Page \d+ -->\n"
@@ -141,18 +141,11 @@ def split_single_md_to_pages_md(docling_md_list:list[str])->list[list[str]]:
         docling_pages_md_list.append(single_doc_pages)
     return docling_pages_md_list
 ################################################################
-def docling_md_splitting(docling_md_list:list[str],
-              pymupdf_md_list:list[list[Document]]) -> list[list[str]]:
-    """check metadata of pymupdf4llm and split docling single md to pages md for a doc and
-      store index of files that have diff pages between docling and pymupdf4llm"""
-    qa_metadata(pymupdf_md_list)
-    docling_pages_md_list = split_single_md_to_pages_md(docling_md_list)
-    return docling_pages_md_list
-################################################################
 
 ################################################################
 def num_of_pages_mismatch(docling_pages_md_list:list[list[str]],
-              pymupdf_md_list:list[list[Document]], dir: Path):
+              pymupdf_md_list:list[list[Document]], dir: Path)->None:
+    """store index of files that have diff pages between docling and pymupdf4llm"""
     mismatch_index_list = []
     mismatch_detail_list = []
     for i, pymupdf_doc in enumerate(pymupdf_md_list):
@@ -208,9 +201,11 @@ def reload_docling(doc_pdf:Path)->str:
         image_placeholder="",)
     return pages
 
-def docling_reload_and_resplit(empty_docs_indices:list[int], docs_pdf:list[Path], docling_pages_md_list:list[list[str]]):
+def docling_reload_and_resplit(empty_docs_indices:list[int], docs_pdf:list[Path],
+                 docling_pages_md_list:list[list[str]])->list[list[str]]:
     """use empty_docs_indices to get those pdf path(via docs_pdf)
       and save reparsed md in docling_pages_md_list"""
+    redocling_pages_md_list=deepcopy(docling_pages_md_list)
     for index in empty_docs_indices:
         empty_doc = docs_pdf[index]
         md = reload_docling(empty_doc)
@@ -220,8 +215,8 @@ def docling_reload_and_resplit(empty_docs_indices:list[int], docs_pdf:list[Path]
         separator_pattern = r"\n<-- Page {page} -->\n"
         single_doc_pages = re.split(separator_pattern, md)
         # place correctly ocr doc in list
-        docling_pages_md_list[index]=single_doc_pages
-    return docling_pages_md_list
+        redocling_pages_md_list[index]=single_doc_pages
+    return redocling_pages_md_list
 
 def gemini_init():
     client = genai.Client()
@@ -258,20 +253,28 @@ def gemini_text_correction_prompt(doc_pages:list[str], chat)->list[str]:
 
 def punctuation_correction(empty_docs_indices:list[int],docling_pages_md_list:list[list[str]])->list[list[str]]:
     """using gemini free api; correct grammer, syntax and punctuation"""
+    cor_docling_pages_md_list=deepcopy(docling_pages_md_list)
     client, chat=gemini_init()
     for idx in empty_docs_indices:
-        docling_pages_md_list[idx]=gemini_text_correction_prompt(docling_pages_md_list[idx],chat)
-    return docling_pages_md_list
+        cor_docling_pages_md_list[idx]=gemini_text_correction_prompt(cor_docling_pages_md_list[idx],chat)
+    return cor_docling_pages_md_list
 ################################################################
 def blank_docs_correction_for_mismatched(docs_pdf:list[Path], docling_pages_md_list:list[list[str]], dir: Path)->list[list[str]]:
     """first load mismatch index, then reload completely blank docs,
     finally correct grammer using gemini"""
+    if not (dir/"log_mismatch_index.txt").exists():
+        print("no docs with mismatch pages so no correction")
+        return []
+    
     # read mismatch index
     with open(dir/"log_mismatch_index.txt", 'r') as file:
         indices = [int(line.strip()) for line in file]
-        
     # identify blank docs and reload again
     empty_docs_indices=identify_indices_of_blank_docs(indices,docling_pages_md_list) #indices=[2, 12, 13, 59, 106]
+    # if no blank mismatched docs, then avoid following two functions
+    if len(empty_docs_indices)==0:
+        return docling_pages_md_list
+
     docling_pages_md_list=docling_reload_and_resplit(empty_docs_indices, docs_pdf, docling_pages_md_list)
     docling_pages_md_list = punctuation_correction(empty_docs_indices, docling_pages_md_list)
     return docling_pages_md_list
@@ -362,9 +365,10 @@ def blank_pgs_correction(ref_list:list[str], text_list:list[str])->list[str]:
                 continue
     return result
 ################################################################
-def mismatch_pages_alignment_correction(docs_pdf:list[Path], docling_pages_md_list:list[list[str]], 
+def mismatch_pages_alignment_correction(docs_pdf:list[Path], c_docling_pages_md_list:list[list[str]], 
                               pymupdf_md_list:list[list[Document]], dir:Path)->list[list[str]]:
     """first load mismatch index, then correct misaligned pages due to blank/error pages   """
+    docling_pages_md_list=deepcopy(c_docling_pages_md_list)
     # read mismatch index
     with open(dir/"log_mismatch_index.txt", 'r') as file:
         indices = [int(line.strip()) for line in file]
@@ -405,8 +409,9 @@ def modify_langpages(docling_pages_md_list:list[list[str]],
     
 
 
-def place_empty_string_for_non_word_pgs(md_list:list[list[Document]])->list[list[Document]]:
+def place_empty_string_for_non_word_pgs(c_md_list:list[list[Document]])->list[list[Document]]:
     """standardize empty pages to '' instead of '\n\n'"""
+    md_list = deepcopy(c_md_list)
     for i,md_pages in enumerate(md_list):
         for n,pg in enumerate(md_pages):
             if is_empty(pg.page_content):

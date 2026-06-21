@@ -1,9 +1,9 @@
 DOCS_DIR: ./policies
 
 PDF:
-  return_saved: False
+  return_saved: True
   fresh_save_raw: False
-  save_md: True
+  save_md: False
   MD_PYMUPDF_DIR: ./store/pdf/md_pymupdf_policies
   MD_DOCLING_DIR: ./store/pdf/md_docling_policies
   MD_DIR: ./store/pdf

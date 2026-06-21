@@ -1,0 +1,9 @@
+DOCS_DIR: ./tests/fixtures/data
+
+PDF:
+  return_saved: False
+  fresh_save_raw: True
+  save_md: True
+  MD_PYMUPDF_DIR: ./tests/output/pdf/md_pymupdf_policies
+  MD_DOCLING_DIR: ./tests/output/pdf/md_docling_policies
+  MD_DIR: ./tests/output/pdf

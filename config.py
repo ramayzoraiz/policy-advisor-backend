@@ -9,4 +9,5 @@ cfg = Box.from_yaml(filename="./cfg.yaml")
 
 DOCS_PATH = cfg.DOCS_DIR
 cfg_pdf = cfg.PDF
+cfg_excel = cfg.EXCEL
 

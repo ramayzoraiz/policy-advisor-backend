@@ -1,10 +1,8 @@
 import pytest
-import pickle
 from pathlib import Path
 from tests.configtest import DOCS_PATH, cfg_pdf
 from parsers.utils import common_utils as u1
 from parsers.utils import pdf_utils as p
-from config import DOCS_PATH, cfg_pdf
 ext_list=[".pdf"]
 DOCS_PATH=Path(DOCS_PATH)
 
@@ -33,7 +31,7 @@ def indices_mismatch_blank_docs(load_initials, docling_md_splitting):
     MD_DIR, MD_PYMUPDF_DIR, MD_DOCLING_DIR, docs_pdf = load_initials
     docling_pages_md_list = docling_md_splitting
     # read mismatch index
-    if not (dir/"log_mismatch_index.txt").exists():
+    if not (MD_DIR/"log_mismatch_index.txt").exists():
         return [], []
     with open(MD_DIR/"log_mismatch_index.txt", 'r') as file:
         mismatch_docs_indices = [int(line.strip()) for line in file]
@@ -82,7 +80,7 @@ def modify_langpages(load_raw_md, alignment_correction):
 
 def test_load_initials(load_initials):
     MD_DIR, MD_PYMUPDF_DIR, MD_DOCLING_DIR, docs_pdf = load_initials
-    assert len(docs_pdf)>1, f"data has no pdf file in {DOCS_PATH}"
+    assert len(docs_pdf)>0, f"data has no pdf file in {DOCS_PATH}"
     assert isinstance(DOCS_PATH, Path)
     assert isinstance(MD_DIR, Path)
     assert isinstance(MD_PYMUPDF_DIR, Path)
@@ -91,8 +89,9 @@ def test_load_initials(load_initials):
 
 def test_save_raw_md(load_initials):
     MD_DIR, MD_PYMUPDF_DIR, MD_DOCLING_DIR, docs_pdf = load_initials
-    p.save_raw_md_from_pdf(docs_pdf, MD_PYMUPDF_DIR, MD_DOCLING_DIR)
-    # Assert it is not empty
+    if cfg_pdf.fresh_save_raw:
+        p.save_raw_md_from_pdf(docs_pdf, MD_PYMUPDF_DIR, MD_DOCLING_DIR)
+    # Assert it is not empty for next test of loading
     assert (MD_PYMUPDF_DIR/"raw.pkl").is_file(), f"no raw.pkl file saved in {MD_PYMUPDF_DIR}"
     assert (MD_DOCLING_DIR/"raw.pkl").is_file(), f"no raw.pkl file saved in {MD_DOCLING_DIR}"
     
@@ -106,10 +105,10 @@ def test_load_saved_raw_md_from_pdf(load_initials, load_raw_md):
 def test_docling_md_splitting(load_initials, docling_md_splitting):
     MD_DIR, MD_PYMUPDF_DIR, MD_DOCLING_DIR, docs_pdf = load_initials
     docling_pages_md_list = docling_md_splitting
-    p.save_obj(MD_DOCLING_DIR, 'pages_raw.pkl', docling_pages_md_list)
+    u1.save_obj(MD_DOCLING_DIR, 'pages_raw.pkl', docling_pages_md_list)
     
 
-def test_docs_with_diff_num_of_pgs(load_raw_md, docling_md_splitting):
+def test_docs_with_diff_num_of_pgs(load_initials, load_raw_md, docling_md_splitting):
     MD_DIR, MD_PYMUPDF_DIR, MD_DOCLING_DIR, docs_pdf = load_initials
     pymupdf_md_list, docling_md_list = load_raw_md
     docling_pages_md_list = docling_md_splitting
@@ -132,7 +131,7 @@ def test_docling_reload_and_split(load_initials, indices_mismatch_blank_docs, re
         "so no redocling happened")
     else:
         docling_pages_md_list = redocling
-        p.save_obj(MD_DOCLING_DIR, 'pages_redocling.pkl', docling_pages_md_list)
+        u1.save_obj(MD_DOCLING_DIR, 'pages_redocling.pkl', docling_pages_md_list)
 
 
 def test_punctuation_correction(load_initials, indices_mismatch_blank_docs, punctuation_gemini):
@@ -143,13 +142,13 @@ def test_punctuation_correction(load_initials, indices_mismatch_blank_docs, punc
         "so no punctuation needed")
     else:
         docling_pages_md_list = punctuation_gemini
-        p.save_obj(MD_DOCLING_DIR, 'pages_punctuation.pkl', docling_pages_md_list)
+        u1.save_obj(MD_DOCLING_DIR, 'pages_punctuation.pkl', docling_pages_md_list)
 
 
 def test_alignment_correction(load_initials, alignment_correction):
     MD_DIR, MD_PYMUPDF_DIR, MD_DOCLING_DIR, docs_pdf = load_initials
     docling_pages_md_list = alignment_correction
-    p.save_obj(MD_DOCLING_DIR, 'pages_alignment.pkl', docling_pages_md_list)
+    u1.save_obj(MD_DOCLING_DIR, 'pages_alignment.pkl', docling_pages_md_list)
 
 
 def test_pymupdf_metadata(load_raw_md):
@@ -160,15 +159,16 @@ def test_pymupdf_metadata(load_raw_md):
 def test_modify_langpages(load_initials, modify_langpages):
     MD_DIR, MD_PYMUPDF_DIR, MD_DOCLING_DIR, docs_pdf = load_initials
     md_list = modify_langpages
-    p.save_obj(MD_DIR, 'mod_langpages.pkl', md_list)
+    u1.save_obj(MD_DIR, 'mod_langpages.pkl', md_list)
 
 
 def test_minimize_tokkens_on_non_word_pgs(load_initials, modify_langpages):
     MD_DIR, MD_PYMUPDF_DIR, MD_DOCLING_DIR, docs_pdf = load_initials
     md_list = modify_langpages
     md_list = p.place_empty_string_for_non_word_pgs(md_list)
-    p.save_obj(MD_DIR, 'pdf_md_list.pkl', md_list)
-    p.save_obj(MD_DIR, 'docs_pdf.pkl', docs_pdf)
+    if cfg_pdf.save_md:
+        u1.save_obj(MD_DIR, 'pdf_md_list.pkl', md_list)
+        u1.save_obj(MD_DIR, 'docs_pdf.pkl', docs_pdf)
     
 
 

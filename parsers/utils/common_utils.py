@@ -1,8 +1,18 @@
 from pydantic import validate_call
-from typing import Tuple,List
+from typing import Any
 from pathlib import Path
-from box import Box
+import pickle
 
+
+def load_saved_obj(dir: Path, filename: str)->list[str]:
+    with open(dir/filename, 'rb') as file:
+        obj = pickle.load(file)
+    return obj
+
+
+def save_obj(dir: Path, filename:str, obj:Any)->None:
+    with open(dir/filename, 'wb') as file:
+        pickle.dump(obj, file)
 
 
 @validate_call(validate_return=True)
@@ -18,11 +28,10 @@ def list_docs(docs_path:Path) -> list[Path]:
     print(docs_formats)
     # quality check that no file is without extension
     assert not '' in docs_formats, "file without extension is present"
-
     return docs_list
 
 
-def filter_ext(docs:List[Path],ext_list:List[str])-> List[Path] | List[List[Path]]:
+def filter_ext(docs:list[Path],ext_list:list[str])-> list[Path] | list[list[Path]]:
     docs_ext_list = []
     for ext in ext_list:
         docs_ext = [d for d in docs if d.suffix==ext]

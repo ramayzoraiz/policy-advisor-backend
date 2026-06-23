@@ -2,6 +2,7 @@ import pymupdf.layout, pymupdf4llm
 from langchain_pymupdf4llm import PyMuPDF4LLMLoader
 from langchain_core.documents import Document
 import torch
+torch.set_float32_matmul_precision('high')
 from docling.datamodel.pipeline_options import PdfPipelineOptions, RapidOcrOptions
 from docling.document_converter import DocumentConverter, PdfFormatOption, InputFormat
 from langchain_docling import DoclingLoader
@@ -14,8 +15,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from copy import deepcopy
 from google import genai
-from google.genai import types
-from typing import Any
+from parsers.utils import common_utils as u1
 
 ################################################################
 def load_saving_paths(cfg)->tuple[Path, Path, Path]:
@@ -29,20 +29,6 @@ def load_saving_paths(cfg)->tuple[Path, Path, Path]:
     MD_DOCLING_DIR.mkdir(parents=True) if not MD_DOCLING_DIR.exists() else print("md_docling_dir exists so it could be overwritten")
     return MD_DIR, MD_PYMUPDF_DIR, MD_DOCLING_DIR
 ################################################################
-
-################################################################
-def load_saved_obj(dir: Path, filename: str)->list[str]:
-    with open(dir/filename, 'rb') as file:
-        obj = pickle.load(file)
-    return obj
-################################################################
-
-################################################################
-def save_obj(dir: Path, filename:str, obj:Any)->None:
-    with open(dir/filename, 'wb') as file:
-        pickle.dump(obj, file)
-################################################################
-
 
 def load_raw_md_from_pdf_by_pymupdf(docs_pdf:list[Path]) -> list[list[Document]]:
     """pymupdf4llm langchain outputs metadata, page_content for each page"""
@@ -61,7 +47,7 @@ def load_raw_md_from_pdf_by_pymupdf(docs_pdf:list[Path]) -> list[list[Document]]
     return raw_md_from_pdf_by_pymupdf_list #[list[Document(Pg),Document(Pg),...],...]
 
 def load_raw_md_from_pdf_by_docling(docs_pdf:list[Path]) -> list[str]:
-    """altough langchain docling is interbnally used; output is single whole document markdown string"""
+    """although langchain docling is internally used; output is single whole document markdown string"""
     pipeline_options = PdfPipelineOptions()
     pipeline_options.allow_external_plugins = True
     converter = DocumentConverter(format_options={
@@ -85,16 +71,16 @@ def save_raw_md_from_pdf(docs_pdf:list[Path], out_pymupdf_md_dir:Path, out_docli
     pymupdf_md_list = load_raw_md_from_pdf_by_pymupdf(docs_pdf)
     docling_md_list = load_raw_md_from_pdf_by_docling(docs_pdf)
     # Save the object to a file
-    save_obj(out_pymupdf_md_dir, 'raw.pkl', pymupdf_md_list)
-    save_obj(out_docling_md_dir, 'raw.pkl', docling_md_list)
+    u1.save_obj(out_pymupdf_md_dir, 'raw.pkl', pymupdf_md_list)
+    u1.save_obj(out_docling_md_dir, 'raw.pkl', docling_md_list)
 ################################################################
 
 ################################################################
 def load_saved_raw_md_from_pdf(out_pymupdf_md_dir:Path, out_docling_md_dir:Path)->tuple[list[list[Document]],list[str]]:
     """loads pickle files stored by save_raw_md_from_pdf"""
     # Load the object from a file
-    pymupdf_md_list = load_saved_obj(out_pymupdf_md_dir, 'raw.pkl')
-    docling_md_list = load_saved_obj(out_docling_md_dir, 'raw.pkl')
+    pymupdf_md_list = u1.load_saved_obj(out_pymupdf_md_dir, 'raw.pkl')
+    docling_md_list = u1.load_saved_obj(out_docling_md_dir, 'raw.pkl')
     return pymupdf_md_list, docling_md_list
 ################################################################
 
@@ -185,6 +171,8 @@ def reload_docling(doc_pdf:Path)->str:
     """reload docling with rapidocr and force it to operate on full page"""
     pipeline_options = PdfPipelineOptions()
     pipeline_options.allow_external_plugins = True
+    # for table extraction else warning
+    pipeline_options.generate_page_images = True
     # Force full page OCR for better detection of skewed text
     pipeline_options.ocr_options = RapidOcrOptions(
         force_full_page_ocr=True,  # Hybrid mode: OCR only where no text exists
@@ -222,7 +210,7 @@ def gemini_init():
     client = genai.Client()
 
     # 1. Define your configuration
-    chat_config = types.GenerateContentConfig(
+    chat_config = genai.types.GenerateContentConfig(
         temperature=1.0,
         system_instruction=(
             "You are an English grammar expert. Correct text according to these rules:\n"

@@ -14,3 +14,10 @@ EXCEL:
   save_md: True
   MD_DIR: ./store/excel
 
+PPT:
+  return_saved: True
+  fresh_save_raw: True
+  save_md: True
+  MD_DIR: ./store/ppt
+  PPT2PDF_DIR: ./store/ppt/ppt2pdf
+

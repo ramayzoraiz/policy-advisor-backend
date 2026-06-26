@@ -10,3 +10,4 @@ cfg = Box.from_yaml(filename="./tests/cfgtest.yaml")
 DOCS_PATH = cfg.DOCS_DIR
 cfg_pdf = cfg.PDF
 cfg_excel = cfg.EXCEL
+cfg_ppt = cfg.PPT

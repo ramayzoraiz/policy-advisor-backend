@@ -13,3 +13,11 @@ EXCEL:
   fresh_save_raw: True
   save_md: True
   MD_DIR: ./tests/output/excel
+
+PPT:
+  return_saved: False # not used during testing
+  fresh_save_raw: True
+  save_md: True
+  MD_DIR: ./tests/output/ppt
+  PPT2PDF_DIR: ./tests/output/ppt/ppt2pdf
+

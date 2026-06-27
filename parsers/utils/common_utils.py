@@ -4,7 +4,7 @@ from pathlib import Path
 import pickle
 
 
-def load_saved_obj(dir: Path, filename: str)->list[str]:
+def load_saved_obj(dir: Path, filename: str)->Any:
     with open(dir/filename, 'rb') as file:
         obj = pickle.load(file)
     return obj

@@ -21,3 +21,11 @@ PPT:
   MD_DIR: ./store/ppt
   PPT2PDF_DIR: ./store/ppt/ppt2pdf
 
+MSWORD:
+  return_saved: False
+  fresh_save_raw: True
+  save_md: True
+  MD_DIR: ./store/msword
+  MSWORD2DOCX_DIR: ./store/msword/msword2docx
+  MSWORD2PDF_DIR: ./store/msword/msword2pdf
+

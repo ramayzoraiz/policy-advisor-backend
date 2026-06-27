@@ -11,4 +11,5 @@ DOCS_PATH = cfg.DOCS_DIR
 cfg_pdf = cfg.PDF
 cfg_excel = cfg.EXCEL
 cfg_ppt = cfg.PPT
+cfg_msword = cfg.MSWORD
 

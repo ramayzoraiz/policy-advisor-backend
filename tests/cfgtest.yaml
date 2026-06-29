@@ -21,3 +21,11 @@ PPT:
   MD_DIR: ./tests/output/ppt
   PPT2PDF_DIR: ./tests/output/ppt/ppt2pdf
 
+MSWORD:
+  return_saved: False # not used during testing
+  fresh_save_raw: True
+  save_md: True
+  MD_DIR: ./tests/output/msword
+  MSWORD2DOCX_DIR: ./tests/output/msword/msword2docx
+  MSWORD2PDF_DIR: ./tests/output/msword/msword2pdf
+

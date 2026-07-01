@@ -12,4 +12,5 @@ cfg_pdf = cfg.PDF
 cfg_excel = cfg.EXCEL
 cfg_ppt = cfg.PPT
 cfg_msword = cfg.MSWORD
+cfg_image = cfg.IMAGE
 

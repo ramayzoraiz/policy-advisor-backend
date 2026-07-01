@@ -3,7 +3,7 @@ from parsers.utils import common_utils as u1
 from parsers.utils import msword_utils as p
 from copy import deepcopy
 from config import DOCS_PATH, cfg_msword
-ext_list=[".doc",".docx"]
+ext_list=[".doc",".docx"] #4,15
 DOCS_PATH = Path(DOCS_PATH)
 
 def pipeline1():

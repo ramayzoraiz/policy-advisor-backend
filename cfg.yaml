@@ -30,7 +30,7 @@ MSWORD:
   MSWORD2PDF_DIR: ./store/msword/msword2pdf
 
 IMAGE:
-  return_saved: False
+  return_saved: True
   fresh_save_raw: True
   save_md: True
   MD_DIR: ./store/image

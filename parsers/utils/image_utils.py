@@ -11,7 +11,7 @@ from parsers.utils import common_utils as u1
 import re
 
 
-def load_saving_paths(cfg)->tuple[Path, Path]:
+def load_saving_paths(cfg)->Path:
     # load output paths if not exist
     MD_DIR = Path(cfg.MD_DIR)
     # create dir if not exist else give overwrite warning

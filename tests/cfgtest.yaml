@@ -29,3 +29,9 @@ MSWORD:
   MSWORD2DOCX_DIR: ./tests/output/msword/msword2docx
   MSWORD2PDF_DIR: ./tests/output/msword/msword2pdf
 
+IMAGE:
+  return_saved: False # not used during testing
+  fresh_save_raw: True
+  save_md: True
+  MD_DIR: ./tests/output/image
+

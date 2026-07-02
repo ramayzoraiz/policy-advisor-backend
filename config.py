@@ -14,3 +14,5 @@ cfg_ppt = cfg.PPT
 cfg_msword = cfg.MSWORD
 cfg_image = cfg.IMAGE
 
+cfg_split = cfg.SPLITTER
+

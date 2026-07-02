@@ -35,3 +35,7 @@ IMAGE:
   save_md: True
   MD_DIR: ./store/image
 
+SPLITTER:
+  CHUNK_SIZE : 3000
+  CHUNK_OVERLAP : 600
+

@@ -1,44 +1,31 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from splitters import utils
 from langchain_core.documents import Document
-from config import cfg_split as cs
+from parsers.utils.common_utils import load_saved_obj, save_obj
+from itertools import chain
+from config import PARSE_OUT, SPLIT_OUT
 
-def split_documents(documents: list[list[Document]]):
-    """
-    Split documents into smaller chunks for better retrieval.
-    
-    Args:
-        documents: DocObj=pg, list[DocObj]=pgs of a doc, list[list[DocObj]]=pgs of docs
-        
-    Returns:
-        List of split Document chunks
-    """
-    if not documents:
-        print("empty documents argument in split_documents function")
-        return []
-    
-    print(f"\n✂️  Splitting documents into chunks...")
-    
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=cs.CHUNK_SIZE,
-        chunk_overlap=cs.CHUNK_OVERLAP,
-        separators=["\n\n", "\n", ". ", ", ", " ", ""],
-        # length_function=len
-    )
-    
-    split_docs = []
 
-    for doc in documents:
-        doc_chunks = text_splitter.split_documents(doc)
-        # Add paragraph-level metadata
-        for i, chunk in enumerate(doc_chunks):
-            chunk.metadata["chunk_id"] = i
-            chunk.metadata["char_count"] = len(chunk.page_content)
-        split_docs.append(doc_chunks)
-        
-        print(f"   ✓ Created {len(doc_chunks)} chunks of {doc[0].metadata["source"]}")
-        print(f"   📊 Average chunk size: {sum(len(c.page_content) for c in doc_chunks) // len(doc_chunks)} characters")
-    
-    return split_docs
+def split():
+    # docs=[docs_pdf,docs_excel,docs_pptx,docs_msword,docs_image]
+    # md_list=[pdf_md_list,excel_md_list,ppt_md_list,msword_md_list,image_md_list]
+    # a = {"docs":docs, "md_list":md_list}
+    a=load_saved_obj(PARSE_OUT,'')
+    docs=a["docs"]
+    md_list=a["md_list"]
+
+    # flatten the lists
+    docs = list(chain.from_iterable(docs))
+    md_list = list(chain.from_iterable(md_list))
+
+    split_list = utils.split_documents_v2(md_list)
+
+    save_obj(SPLIT_OUT,'',split_list)
+
+
+
+
+
 
 
 

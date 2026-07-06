@@ -5,13 +5,25 @@ import pickle
 
 
 def load_saved_obj(dir: Path, filename: str)->Any:
+    """
+    Usage:
+    Either \n dir is parent dir and filename is provided; \n or \n
+    dir is full path and filename is empty string
+    """
     with open(dir/filename, 'rb') as file:
         obj = pickle.load(file)
     return obj
 
 
 def save_obj(dir: Path, filename:str, obj:Any)->None:
-    with open(dir/filename, 'wb') as file:
+    """
+    Usage:
+    Either \n dir is parent dir and filename is provided; \n or \n
+    dir is full path and filename is empty string
+    """
+    path = dir/filename
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, 'wb') as file:
         pickle.dump(obj, file)
 
 

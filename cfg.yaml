@@ -1,4 +1,8 @@
 DOCS_DIR: ./policies
+PARSE_OUT: ./store/parse_out.pkl
+SPLIT_OUT: ./store/split_out.pkl
+EMBED_OUT: ./store/embed_out.pkl
+VDB_OUT: ./VDB/
 
 PDF:
   return_saved: True

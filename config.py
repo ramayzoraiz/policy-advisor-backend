@@ -8,6 +8,11 @@ from box import Box
 cfg = Box.from_yaml(filename="./cfg.yaml")
 
 DOCS_PATH = cfg.DOCS_DIR
+PARSE_OUT = cfg.PARSE_OUT
+SPLIT_OUT = cfg.SPLIT_OUT
+VDB_OUT = cfg.VDB_OUT
+
+
 cfg_pdf = cfg.PDF
 cfg_excel = cfg.EXCEL
 cfg_ppt = cfg.PPT
